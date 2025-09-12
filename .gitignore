@@ -30,3 +30,6 @@ yarn-error.log*
 *.swo
 .idea
 .vscode
+
+node_modules/
+.env
