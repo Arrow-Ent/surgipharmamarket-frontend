@@ -1,27 +1,66 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
-<head><meta charset="utf-8" /><meta name="viewport" content="width=device-width,initial-scale=1" /><title>Login — SurgiPharmaMarket</title><link rel="stylesheet" href="css/style.css" /></head>
+<head>
+  <meta charset="UTF-8"/>
+  <title>Login | SurgiPharma Market</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 40px; background: #f9fafc; }
+    h1 { color: #2c3e50; }
+    form { background: #fff; padding: 20px; border-radius: 8px; margin-bottom: 30px; box-shadow: 0 2px 6px rgba(0,0,0,0.1); max-width: 400px; }
+    label { display: block; margin-top: 10px; }
+    input { width: 100%; padding: 8px; margin-top: 5px; border: 1px solid #ccc; border-radius: 4px; }
+    select { width: 100%; padding: 8px; margin-top: 5px; border: 1px solid #ccc; border-radius: 4px; }
+    button { margin-top: 15px; padding: 10px; width: 100%; background: #27ae60; color: #fff; border: none; border-radius: 4px; cursor: pointer; }
+    button:hover { background: #219150; }
+    .msg { margin-top: 15px; font-size: 14px; }
+    .success { color: green; }
+    .error { color: red; }
+  </style>
+</head>
 <body>
-  <header class="header"><div class="brand">SurgiPharmaMarket</div><nav class="header-right"><a href="index.html">Home</a><a href="register.html">Register</a></nav></header>
-  <main class="container">
-    <div class="card" style="max-width:520px;margin:0 auto">
-      <h3>Sign in</h3>
-      <div class="form-row"><input id="email" class="input" placeholder="Email" /><input id="password" type="password" class="input" placeholder="Password" /></div>
-      <div style="text-align:right"><button id="loginBtn" class="btn">Sign in</button></div>
-      <pre id="out" style="margin-top:12px"></pre>
-    </div>
-  </main>
+  <h1>Login to SurgiPharma Market</h1>
+
+  <form id="loginForm">
+    <label>Email <input type="email" id="email" required></label>
+    <label>Password <input type="password" id="password" required></label>
+    <label>Role
+      <select id="role" required>
+        <option value="buyer">Buyer</option>
+        <option value="seller">Seller</option>
+      </select>
+    </label>
+    <button type="submit">Login</button>
+    <div id="msg" class="msg"></div>
+  </form>
+
   <script src="js/api.js"></script>
   <script>
-    document.getElementById('loginBtn').addEventListener('click', async ()=>{
-      const email = document.getElementById('email').value;
-      const password = document.getElementById('password').value;
-      const out = document.getElementById('out'); out.textContent = 'Signing in...';
-      try{
-        const res = await apiRequest('/auth/login', { method:'POST', body: { email, password } });
-        if(res && res.token){ saveToken(res.token); saveUser(res.user||null); out.textContent = 'Signed in'; setTimeout(()=>location.href='index.html',600); }
-        else out.textContent = JSON.stringify(res, null, 2);
-      }catch(e){ out.textContent = 'Error: ' + (e.error || e.message || e); }
+    document.getElementById("loginForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const msg = document.getElementById("msg");
+      msg.textContent = "Logging in...";
+      msg.className = "msg";
+
+      try {
+        const result = await login({
+          email: document.getElementById("email").value,
+          password: document.getElementById("password").value,
+          role: document.getElementById("role").value,
+        });
+
+        saveToken(result.token, result.role);
+        msg.textContent = "✅ Login successful!";
+        msg.className = "msg success";
+
+        if (result.role === "seller") {
+          window.location.href = "seller.html";
+        } else {
+          window.location.href = "orders.html";
+        }
+      } catch (err) {
+        msg.textContent = "❌ " + err.message;
+        msg.className = "msg error";
+      }
     });
   </script>
 </body>
