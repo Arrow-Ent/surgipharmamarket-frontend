@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>SurgiPharma Market — Demo</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <header class="header">
+    <div class="brand">SurgiPharmaMarket</div>
+    <nav class="header-right">
+      <a href="index.html" style="color:rgba(255,255,255,0.95)">Home</a>
+      <a href="register.html">Register</a>
+      <a href="login.html">Login</a>
+      <a href="seller.html">Seller</a>
+      <a href="orders.html">Orders</a>
+    </nav>
+  </header>
+
+  <main class="container">
+    <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:18px">
+      <h2 style="margin:0">Featured Products</h2>
+      <div>
+        <input id="searchInput" class="input" placeholder="Search products..." style="width:260px; display:inline-block"/>
+        <button id="searchBtn" class="btn secondary" style="margin-left:8px">Search</button>
+      </div>
+    </div>
+
+    <div id="products" class="grid"></div>
+
+    <div class="footer">Demo frontend — connect to your backend by editing <code>js/api.js</code> API_BASE variable</div>
+  </main>
+
+  <script src="js/api.js"></script>
+  <script>
+    async function renderProducts(q){
+      const el = document.getElementById('products');
+      el.innerHTML = '<div style="grid-column:1/-1" class="small">Loading products…</div>';
+      try{
+        const res = await apiRequest('/products' + (q?('?q='+encodeURIComponent(q)):''));
+        if(!res || !res.length){ el.innerHTML = '<div style="grid-column:1/-1" class="small">No products found</div>'; return; }
+        el.innerHTML = '';
+        res.forEach(p => {
+          const card = document.createElement('div'); card.className = 'card';
+          card.innerHTML = `<div class="product-title">${p.title||p.name||p._id}</div>
+            <div class="product-desc">${(p.description||'').substr(0,120)}</div>
+            <div style="display:flex;justify-content:space-between;align-items:center">
+              <div><strong>₹ ${p.price}</strong><div class="small">Stock: ${p.stock||0}</div></div>
+              <div><button class="btn" onclick='buy("${p._id}", ${p.price})'>Buy</button></div>
+            </div>`;
+          el.appendChild(card);
+        });
+      }catch(err){
+        el.innerHTML = '<div style="grid-column:1/-1" class="small">Error loading products: '+(err.error || err.message || err) +'</div>';
+      }
+    }
+    async function buy(id, price){
+      const user = getUser();
+      if(!user){ location.href='login.html'; return; }
+      const qty = parseInt(prompt('Quantity', '1'),10) || 1;
+      try{
+        const order = await apiRequest('/orders', { method: 'POST', body: { items: [{ productId: id, quantity: qty, price }], paymentMethod: 'COD' }, auth: true });
+        alert('Order placed: ' + order._id);
+        location.href = 'orders.html';
+      }catch(e){ alert('Order error: ' + (e.error || e.message || e)); }
+    }
+
+    document.getElementById('searchBtn').addEventListener('click', ()=> renderProducts(document.getElementById('searchInput').value));
+    // initial render
+    renderProducts();
+  </script>
+</body>
+</html>
