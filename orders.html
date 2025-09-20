@@ -1,30 +1,68 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
-<head><meta charset="utf-8" /><meta name="viewport" content="width=device-width,initial-scale=1" /><title>Orders — SurgiPharmaMarket</title><link rel="stylesheet" href="css/style.css" /></head>
+<head>
+  <meta charset="UTF-8"/>
+  <title>Buyer Orders | SurgiPharma Market</title>
+</head>
 <body>
-  <header class="header"><div class="brand">SurgiPharmaMarket</div><nav class="header-right"><a href="index.html">Home</a><a href="login.html">Login</a></nav></header>
-  <main class="container">
-    <div class="card" style="max-width:900px;margin:0 auto">
-      <h3>Your Orders</h3>
-      <div id="ordersList"></div>
-    </div>
-  </main>
+  <h1>Buyer Orders</h1>
+  <button onclick="logout()">Logout</button>
+
+  <h2>Available Products</h2>
+  <ul id="products"></ul>
+
+  <h2>Your Orders</h2>
+  <ul id="orders"></ul>
+
   <script src="js/api.js"></script>
   <script>
-    async function loadOrders(){
-      const el = document.getElementById('ordersList'); el.innerHTML = '<div class="small">Loading…</div>';
-      try{
-        const res = await apiRequest('/orders/buyer', { auth:true });
-        if(!res || !res.length){ el.innerHTML = '<div class="small">No orders yet</div>'; return; }
-        el.innerHTML = '';
-        res.forEach(o => {
-          const d = document.createElement('div'); d.className='card'; d.style.marginBottom='12px';
-          d.innerHTML = `<div style="display:flex;justify-content:space-between"><div><strong>Order: ${o._id}</strong><div class="small">Status: ${o.orderStatus} · Payment: ${o.paymentStatus}</div></div><div><strong>₹ ${o.totalAmount}</strong></div></div>
-            <div style="margin-top:8px">${o.items.map(i=>'• '+(i.productId && i.productId.title ? i.productId.title : i.productId)+' × '+i.quantity).join('<br/>')}</div>`;
-          el.appendChild(d);
-        });
-      }catch(e){ el.innerHTML = '<div class="small">Error: ' + (e.error || e.message || e) + '</div>'; }
+    if (getRole() !== "buyer") {
+      alert("Access denied! Please login as buyer.");
+      window.location.href = "login.html";
     }
+
+    const token = getToken();
+
+    async function loadProducts() {
+      const products = await fetchProducts();
+      const list = document.getElementById("products");
+      list.innerHTML = "";
+      products.forEach(p => {
+        const li = document.createElement("li");
+        li.textContent = `${p.name} - ₹${p.price} (Stock: ${p.quantity}) `;
+        const btn = document.createElement("button");
+        btn.textContent = "Buy";
+        btn.onclick = async () => {
+          try {
+            await placeOrder({ productId: p._id, quantity: 1 }, token);
+            alert("Order placed successfully!");
+            loadOrders();
+          } catch (err) {
+            alert("Error: " + err.message);
+          }
+        };
+        li.appendChild(btn);
+        list.appendChild(li);
+      });
+    }
+
+    async function loadOrders() {
+      const orders = await fetchOrders(token);
+      const list = document.getElementById("orders");
+      list.innerHTML = "";
+      orders.forEach(o => {
+        const li = document.createElement("li");
+        li.textContent = `Order ${o._id} - ${o.status}`;
+        list.appendChild(li);
+      });
+    }
+
+    function logout() {
+      clearToken();
+      window.location.href = "login.html";
+    }
+
+    loadProducts();
     loadOrders();
   </script>
 </body>
