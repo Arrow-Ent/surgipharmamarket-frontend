@@ -1,53 +1,53 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
-<head><meta charset="utf-8" /><meta name="viewport" content="width=device-width,initial-scale=1" /><title>Seller — SurgiPharmaMarket</title><link rel="stylesheet" href="css/style.css" /></head>
+<head>
+  <meta charset="UTF-8"/>
+  <title>Seller Dashboard | SurgiPharma Market</title>
+</head>
 <body>
-  <header class="header"><div class="brand">SurgiPharmaMarket</div><nav class="header-right"><a href="index.html">Home</a><a href="login.html">Login</a></nav></header>
-  <main class="container">
-    <div class="card" style="max-width:760px;margin:0 auto">
-      <h3>Seller — Add Product</h3>
-      <div class="form-row"><input id="title" class="input" placeholder="Product title" /><input id="price" class="input" placeholder="Price (₹)" type="number" /></div>
-      <div class="form-row"><input id="stock" class="input" placeholder="Stock" type="number" /><input id="category" class="input" placeholder="Category" /></div>
-      <div style="margin-bottom:12px"><textarea id="description" class="input" placeholder="Short description" rows="4"></textarea></div>
-      <div style="text-align:right"><button id="addBtn" class="btn">Add product</button></div>
-      <hr/>
-      <h4>Your products</h4>
-      <div id="myProducts" class="grid"></div>
-      <pre id="out" style="margin-top:12px"></pre>
-    </div>
-  </main>
+  <h1>Seller Dashboard</h1>
+  <button onclick="logout()">Logout</button>
+
+  <h2>Add Product</h2>
+  <form id="productForm">
+    <label>Name <input type="text" id="name" required></label><br>
+    <label>Price <input type="number" id="price" required></label><br>
+    <label>Quantity <input type="number" id="quantity" required></label><br>
+    <button type="submit">Add Product</button>
+  </form>
+  <div id="msg"></div>
+
   <script src="js/api.js"></script>
   <script>
-    async function loadMyProducts(){
-      const out = document.getElementById('myProducts'); out.innerHTML = '<div class="small" style="grid-column:1/-1">Loading…</div>';
-      try{
-        const user = getUser(); if(!user){ location.href='login.html'; return; }
-        const sellerId = user.id || user._id;
-        const res = await apiRequest('/products?seller=' + encodeURIComponent(sellerId), { auth:false });
-        if(!res || !res.length){ out.innerHTML = '<div class="small" style="grid-column:1/-1">No products</div>'; return; }
-        out.innerHTML='';
-        res.forEach(p=>{
-          const d = document.createElement('div'); d.className='card'; d.innerHTML = `<div class="product-title">${p.title}</div><div class="product-desc">${(p.description||'').substr(0,120)}</div><div><strong>₹ ${p.price}</strong></div>`;
-          out.appendChild(d);
-        });
-      }catch(e){ out.innerHTML = '<div class="small" style="grid-column:1/-1">Error: '+(e.error||e.message||e)+'</div>'; }
+    if (getRole() !== "seller") {
+      alert("Access denied! Please login as seller.");
+      window.location.href = "login.html";
     }
 
-    document.getElementById('addBtn').addEventListener('click', async ()=>{
-      const title = document.getElementById('title').value;
-      const price = Number(document.getElementById('price').value);
-      const stock = Number(document.getElementById('stock').value);
-      const category = document.getElementById('category').value;
-      const description = document.getElementById('description').value;
-      const out = document.getElementById('out'); out.textContent = 'Adding…';
-      try{
-        const res = await apiRequest('/products', { method:'POST', body: { title, description, category, price, stock }, auth:true });
-        out.textContent = 'Product created: ' + (res._id||res.id||'OK');
-        loadMyProducts();
-      }catch(e){ out.textContent = 'Error: ' + (e.error || e.message || e); }
+    document.getElementById("productForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const msg = document.getElementById("msg");
+      msg.textContent = "Adding product...";
+
+      try {
+        const token = getToken();
+        const result = await addProduct({
+          name: document.getElementById("name").value,
+          price: parseFloat(document.getElementById("price").value),
+          quantity: parseInt(document.getElementById("quantity").value, 10),
+        }, token);
+
+        msg.textContent = "✅ Product added successfully!";
+        console.log("Product result:", result);
+      } catch (err) {
+        msg.textContent = "❌ " + err.message;
+      }
     });
 
-    loadMyProducts();
+    function logout() {
+      clearToken();
+      window.location.href = "login.html";
+    }
   </script>
 </body>
 </html>
