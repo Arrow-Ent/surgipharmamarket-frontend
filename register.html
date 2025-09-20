@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8" /><meta name="viewport" content="width=device-width,initial-scale=1" /><title>Register — SurgiPharmaMarket</title><link rel="stylesheet" href="css/style.css" /></head>
+<body>
+  <header class="header"><div class="brand">SurgiPharmaMarket</div><nav class="header-right"><a href="index.html">Home</a><a href="login.html">Login</a></nav></header>
+  <main class="container">
+    <div class="card" style="max-width:700px;margin:0 auto">
+      <h3>Create an account</h3>
+      <p class="small">Choose Buyer to shop, Seller to list products</p>
+      <div class="form-row">
+        <input id="name" class="input" placeholder="Full name" />
+        <input id="email" class="input" placeholder="Email address" />
+      </div>
+      <div class="form-row">
+        <input id="password" class="input" type="password" placeholder="Password" />
+        <select id="role" class="input"><option value="buyer">Buyer</option><option value="seller">Seller</option></select>
+      </div>
+      <div style="text-align:right"><button id="registerBtn" class="btn">Create account</button></div>
+      <pre id="out" style="margin-top:12px"></pre>
+    </div>
+  </main>
+  <script src="js/api.js"></script>
+  <script>
+    document.getElementById('registerBtn').addEventListener('click', async ()=>{
+      const name = document.getElementById('name').value;
+      const email = document.getElementById('email').value;
+      const password = document.getElementById('password').value;
+      const role = document.getElementById('role').value;
+      const out = document.getElementById('out');
+      out.textContent = 'Registering...';
+      try{
+        const res = await apiRequest('/auth/register', { method: 'POST', body: { name, email, password, role } });
+        if(res && res.token){ saveToken(res.token); saveUser(res.user || null); out.textContent = 'Registered successfully'; setTimeout(()=>location.href='index.html',800); }
+        else out.textContent = JSON.stringify(res, null, 2);
+      }catch(e){ out.textContent = 'Error: ' + (e.error || e.message || e); }
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8" /><meta name="viewport" content="width=device-width,initial-scale=1" /><title>Orders — SurgiPharmaMarket</title><link rel="stylesheet" href="css/style.css" /></head>
+<body>
+  <header class="header"><div class="brand">SurgiPharmaMarket</div><nav class="header-right"><a href="index.html">Home</a><a href="login.html">Login</a></nav></header>
+  <main class="container">
+    <div class="card" style="max-width:900px;margin:0 auto">
+      <h3>Your Orders</h3>
+      <div id="ordersList"></div>
+    </div>
+  </main>
+  <script src="js/api.js"></script>
+  <script>
+    async function loadOrders(){
+      const el = document.getElementById('ordersList'); el.innerHTML = '<div class="small">Loading…</div>';
+      try{
+        const res = await apiRequest('/orders/buyer', { auth:true });
+        if(!res || !res.length){ el.innerHTML = '<div class="small">No orders yet</div>'; return; }
+        el.innerHTML = '';
+        res.forEach(o => {
+          const d = document.createElement('div'); d.className='card'; d.style.marginBottom='12px';
+          d.innerHTML = `<div style="display:flex;justify-content:space-between"><div><strong>Order: ${o._id}</strong><div class="small">Status: ${o.orderStatus} · Payment: ${o.paymentStatus}</div></div><div><strong>₹ ${o.totalAmount}</strong></div></div>
+            <div style="margin-top:8px">${o.items.map(i=>'• '+(i.productId && i.productId.title ? i.productId.title : i.productId)+' × '+i.quantity).join('<br/>')}</div>`;
+          el.appendChild(d);
+        });
+      }catch(e){ el.innerHTML = '<div class="small">Error: ' + (e.error || e.message || e) + '</div>'; }
+    }
+    loadOrders();
+  </script>
+</body>
+</html>

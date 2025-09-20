@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8" /><meta name="viewport" content="width=device-width,initial-scale=1" /><title>Login — SurgiPharmaMarket</title><link rel="stylesheet" href="css/style.css" /></head>
+<body>
+  <header class="header"><div class="brand">SurgiPharmaMarket</div><nav class="header-right"><a href="index.html">Home</a><a href="register.html">Register</a></nav></header>
+  <main class="container">
+    <div class="card" style="max-width:520px;margin:0 auto">
+      <h3>Sign in</h3>
+      <div class="form-row"><input id="email" class="input" placeholder="Email" /><input id="password" type="password" class="input" placeholder="Password" /></div>
+      <div style="text-align:right"><button id="loginBtn" class="btn">Sign in</button></div>
+      <pre id="out" style="margin-top:12px"></pre>
+    </div>
+  </main>
+  <script src="js/api.js"></script>
+  <script>
+    document.getElementById('loginBtn').addEventListener('click', async ()=>{
+      const email = document.getElementById('email').value;
+      const password = document.getElementById('password').value;
+      const out = document.getElementById('out'); out.textContent = 'Signing in...';
+      try{
+        const res = await apiRequest('/auth/login', { method:'POST', body: { email, password } });
+        if(res && res.token){ saveToken(res.token); saveUser(res.user||null); out.textContent = 'Signed in'; setTimeout(()=>location.href='index.html',600); }
+        else out.textContent = JSON.stringify(res, null, 2);
+      }catch(e){ out.textContent = 'Error: ' + (e.error || e.message || e); }
+    });
+  </script>
+</body>
+</html>
