@@ -1,20 +1,63 @@
-const API_BASE = "https://surgipharmamarket-backend.onrender.com";
+// frontend/js/api.js
+const API_BASE = "https://surgipharmamarket-backend.onrender.com/api";
 
-function _tokenKey() { return 'sp_token'; }
+/**
+ * Generic API Request helper
+ */
+async function apiRequest(endpoint, method = "GET", body = null, token = null) {
+  const headers = { "Content-Type": "application/json" };
+  if (token) headers["Authorization"] = "Bearer " + token;
 
-async function apiRequest(endpoint, opts) {
-  opts = opts || {};
-  const method = opts.method || 'GET';
-  const headers = { 'Content-Type': 'application/json' };
-  if(opts.auth){ const t = localStorage.getItem(_tokenKey()); if(t) headers['Authorization'] = 'Bearer ' + t; }
-  const res = await fetch((API_BASE||'') + endpoint, { method, headers, body: opts.body ? JSON.stringify(opts.body) : undefined });
-  let data = null;
-  try { data = await res.json(); } catch(e) { data = null; }
-  if(!res.ok) throw data || { error: 'Request failed' };
-  return data;
+  const res = await fetch(`${API_BASE}${endpoint}`, {
+    method,
+    headers,
+    body: body ? JSON.stringify(body) : null,
+  });
+
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.error || `Request failed: ${res.status}`);
+  }
+  return res.json();
 }
 
-function saveToken(token) { localStorage.setItem(_tokenKey(), token); }
-function clearToken() { localStorage.removeItem(_tokenKey()); localStorage.removeItem('sp_user'); }
-function saveUser(user) { localStorage.setItem('sp_user', JSON.stringify(user)); }
-function getUser() { const u = localStorage.getItem('sp_user'); if(!u) return null; try{ return JSON.parse(u); }catch(e){ return null; } }
+// ----------------------------
+// AUTH & USER
+// ----------------------------
+
+// Register buyer
+async function registerBuyer(data) {
+  return apiRequest("/buyers/register", "POST", data);
+}
+
+// Register seller
+async function registerSeller(data) {
+  return apiRequest("/sellers/register", "POST", data);
+}
+
+// Login (works for both buyer/seller)
+async function login(data) {
+  return apiRequest("/auth/login", "POST", data);
+}
+
+// ----------------------------
+// PRODUCTS
+// ----------------------------
+async function addProduct(data, token) {
+  return apiRequest("/products", "POST", data, token);
+}
+
+async function fetchProducts() {
+  return apiRequest("/products", "GET");
+}
+
+// ----------------------------
+// ORDERS
+// ----------------------------
+async function placeOrder(data, token) {
+  return apiRequest("/orders", "POST", data, token);
+}
+
+async function fetchOrders(token) {
+  return apiRequest("/orders", "GET", null, token);
+}
