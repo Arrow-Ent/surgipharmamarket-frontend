@@ -24,18 +24,14 @@ async function apiRequest(endpoint, method = "GET", body = null, token = null) {
 // ----------------------------
 // AUTH & USER
 // ----------------------------
-
-// Register buyer
 async function registerBuyer(data) {
   return apiRequest("/buyers/register", "POST", data);
 }
 
-// Register seller
 async function registerSeller(data) {
   return apiRequest("/sellers/register", "POST", data);
 }
 
-// Login (works for both buyer/seller)
 async function login(data) {
   return apiRequest("/auth/login", "POST", data);
 }
@@ -60,4 +56,25 @@ async function placeOrder(data, token) {
 
 async function fetchOrders(token) {
   return apiRequest("/orders", "GET", null, token);
+}
+
+// ----------------------------
+// TOKEN STORAGE
+// ----------------------------
+function saveToken(token, role) {
+  localStorage.setItem("jwt", token);
+  localStorage.setItem("role", role);
+}
+
+function getToken() {
+  return localStorage.getItem("jwt");
+}
+
+function clearToken() {
+  localStorage.removeItem("jwt");
+  localStorage.removeItem("role");
+}
+
+function getRole() {
+  return localStorage.getItem("role");
 }
